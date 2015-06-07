@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 	};
 
 	printf("sw_alloc(&sw, %d): %d\n", WIDTH, sw_alloc(&sw, WIDTH));
-	printf("sw_get_width(&sw): %u\n", sw_get_width(&sw));
+	printf("sw_widthget_(&sw): %u\n", sw_width_get(&sw));
 
 	TEST_SEQUENCE(&sw, sequence1);
 	sw_reset(&sw);

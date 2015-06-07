@@ -23,15 +23,12 @@ struct sliding_window {
 };
 
 int sw_alloc(struct sliding_window *sw, u32 size);
-bool sw_advance(struct sliding_window *sw, enum sw_val val);
-u32 sw_val_get(struct sliding_window *sw, enum sw_val val);
-void sw_reset(struct sliding_window *sw);
 void sw_free(struct sliding_window *sw);
 
-static inline u32 sw_get_width(struct sliding_window *sw)
-{
-	return sw->width;
-}
-EXPORT_SYMBOL(sw_get_width);
+bool sw_advance(struct sliding_window *sw, enum sw_val val);
+void sw_reset(struct sliding_window *sw);
+
+u32 sw_width_get(struct sliding_window *sw);
+u32 sw_val_get(struct sliding_window *sw, enum sw_val val);
 #endif
 
