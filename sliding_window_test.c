@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 		[ SW_WRITE ] =13 
 	};
 
-	printf("sw_alloc(&sw, %d): %d\n", WIDTH, sw_alloc(&sw, WIDTH));
+	printf("sw_init(&sw, %d): %d\n", WIDTH, sw_init(&sw, WIDTH));
 	printf("sw_widthget_(&sw): %u\n", sw_width_get(&sw));
 
 	TEST_SEQUENCE(&sw, sequence1);
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 	sw_reset(&sw);
 	TEST_SEQUENCE(&sw, sequence3);
 
-	sw_free(&sw);
+	sw_uninit(&sw);
 	return 0;
 }
 

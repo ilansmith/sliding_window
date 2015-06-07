@@ -5,7 +5,7 @@
 /* val == 0 is reserved for SW_NONE, which is does not have a stat counter */
 #define SW_STAT(sw, val) (sw)->stat[(val)-1]
 
-int sw_alloc(struct sliding_window *sw, u32 width)
+int sw_init(struct sliding_window *sw, u32 width)
 {
 	u32 *window, size;
 
@@ -32,14 +32,14 @@ int sw_alloc(struct sliding_window *sw, u32 width)
 
 	return 0;
 }
-EXPORT_SYMBOL(sw_alloc);
+EXPORT_SYMBOL(sw_init);
 
-void sw_free(struct sliding_window *sw)
+void sw_uninit(struct sliding_window *sw)
 {
 	kfree(sw->__window);
 	memset(sw, 0, sizeof(struct sliding_window));
 }
-EXPORT_SYMBOL(sw_free);
+EXPORT_SYMBOL(sw_uninit);
 
 bool sw_advance(struct sliding_window *sw, enum sw_val val_new)
 {

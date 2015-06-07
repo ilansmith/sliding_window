@@ -22,8 +22,8 @@ struct sliding_window {
 	spinlock_t lock;
 };
 
-int sw_alloc(struct sliding_window *sw, u32 size);
-void sw_free(struct sliding_window *sw);
+int sw_init(struct sliding_window *sw, u32 size);
+void sw_uninit(struct sliding_window *sw);
 
 bool sw_advance(struct sliding_window *sw, enum sw_val val);
 void sw_reset(struct sliding_window *sw);
