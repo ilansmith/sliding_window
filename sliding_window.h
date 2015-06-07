@@ -13,13 +13,13 @@ enum sw_val {
 };
 
 struct sliding_window {
-	u32 *__window;	/* initialized to some given size */
-	u32 __size;	/* size of the sliding window in words */
-	u32 *__major;	/* pointer into window */
-	u32 __offset;	/* offset of the 0x3 mask in __major */
-	u32 width;	/* sliding window width */
-	u32 stat[2];	/* statistic table */
-	spinlock_t lock;
+	u32 *__window;		/* initialized to some given size */
+	u32 __size;		/* size of the sliding window in words */
+	u32 *__major;		/* pointer into window */
+	u32 __offset;		/* offset of the 0x3 mask in __major */
+	spinlock_t __lock;	/* statistic read/write lock */
+	u32 width;		/* sliding window width */
+	u32 stat[2];		/* statistic table */
 };
 
 int sw_init(struct sliding_window *sw, u32 size);

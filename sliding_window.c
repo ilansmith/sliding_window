@@ -28,7 +28,7 @@ int sw_init(struct sliding_window *sw, u32 width)
 	sw->__major = sw->__window;
 	sw->__offset = 0x0;
 
-	spin_lock_init(&sw->lock);
+	spin_lock_init(&sw->__lock);
 
 	return 0;
 }
@@ -46,7 +46,7 @@ bool sw_advance(struct sliding_window *sw, enum sw_val val_new)
 	unsigned long flags;
 	enum sw_val val_stale;
 
-	spin_lock_irqsave(&sw->lock, flags);
+	spin_lock_irqsave(&sw->__lock, flags);
 	val_stale = (*sw->__major & ((0x3) << sw->__offset)) >> sw->__offset;
 
 	if (val_new == val_stale)
@@ -75,7 +75,7 @@ out:
 		else
 			sw->__major = sw->__window;
 	}
-	spin_unlock_irqrestore(&sw->lock, flags);
+	spin_unlock_irqrestore(&sw->__lock, flags);
 
 	return true;
 }
@@ -85,7 +85,7 @@ void sw_reset(struct sliding_window *sw)
 {
 	unsigned long flags;
 
-	spin_lock_irqsave(&sw->lock, flags);
+	spin_lock_irqsave(&sw->__lock, flags);
 
 	memset(sw->__window, 0, sizeof(u32) * sw->__size);
 	memset(sw->stat, 0, sizeof(sw->stat));
@@ -93,7 +93,7 @@ void sw_reset(struct sliding_window *sw)
 	sw->__major = sw->__window;
 	sw->__offset = 0x0;
 
-	spin_unlock_irqrestore(&sw->lock, flags);
+	spin_unlock_irqrestore(&sw->__lock, flags);
 }
 EXPORT_SYMBOL(sw_reset);
 
@@ -108,14 +108,14 @@ u32 sw_val_get(struct sliding_window *sw, enum sw_val val)
 	u32 ret;
 	unsigned long flags;
 
-	spin_lock_irqsave(&sw->lock, flags);
+	spin_lock_irqsave(&sw->__lock, flags);
 	if (val == SW_NONE) {
 		ret = sw->width -
 			(SW_STAT(sw, SW_READ) + SW_STAT(sw, SW_WRITE));
 	} else {
 		ret = SW_STAT(sw, val);
 	}
-	spin_unlock_irqrestore(&sw->lock, flags);
+	spin_unlock_irqrestore(&sw->__lock, flags);
 
 	return ret;
 }
