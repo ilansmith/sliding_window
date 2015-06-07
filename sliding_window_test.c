@@ -1,34 +1,98 @@
 #include <stdio.h>
 #include "sliding_window.h"
 
-int main(int argc, char **argv)
+#define COL_NORLAL "\033[0;0m"
+#define COL_SUCCESS "\033[0;32m"
+#define COL_FAIL "\033[0;31m"
+
+#define WIDTH 20
+
+#define ARRAY_SZ(arr) (sizeof(arr)/sizeof(arr[0]))
+#define TEST_SEQUENCE(sw, seq) test_sequence(sw, seq, ARRAY_SZ(seq), \
+	seq ## _results)
+
+struct sw_test {
+	enum sw_val dir;
+	u32 count;
+};
+
+static void print_result(char *str, u32 result, u32 expected)
 {
-	struct sliding_window sw;
-	int ret, i;
-	struct {
-		enum sw_val dir;
-		u32 count;
-	} sequence[] = {
-		{ SW_WRITE, 25 },
-		{ SW_READ, 2 },
-		{ SW_WRITE, 3 },
-	};
+	int ok = result == expected;
 
-	ret = sw_alloc(&sw, 2);
-	printf("sw_alloc(&sw, 2): %d\n", ret);
-	printf("sw_get_size(&sw): %u*sizeof(u32) = %lu (%lu bits)\n",
-		sw_get_size(&sw), sw_get_size(&sw) * sizeof(u32),
-		sw_get_size(&sw) * sizeof(u32) * 8);
+	printf("total %s = %u (%s%s%s)\n", str, result,
+		ok ? COL_SUCCESS : COL_FAIL, ok ? "good" : "bad", COL_NORLAL);
+}
 
-	for (i = 0; i < ARRAY_SZ(sequence); i++) {
+static void test_sequence(struct sliding_window *sw, struct sw_test *sequence,
+	int len, u32 results[3])
+{
+	int i;
+
+	for (i = 0; i < len; i++) {
 		int j;
 
 		for (j = 0; j < sequence[i].count; j++)
-			sw_advance(&sw, sequence[i].dir);
+			sw_advance(sw, sequence[i].dir);
 	}
 
-	printf("total SW_READ = %u\n", sw_val_get(&sw, SW_READ));
-	printf("total SW_WRITE = %u\n", sw_val_get(&sw, SW_WRITE));
+	printf("\n");
+	print_result("SW_NONE", sw_val_get(sw, SW_NONE), results[SW_NONE]);
+	print_result("SW_READ", sw_val_get(sw, SW_READ), results[SW_READ]);
+	print_result("SW_WRITE", sw_val_get(sw, SW_WRITE), results[SW_WRITE]);
+}
+
+int main(int argc, char **argv)
+{
+	struct sliding_window sw;
+	struct sw_test sequence1[] = {
+		{ SW_WRITE, 15 },
+		{ SW_READ, 1 },
+		{ SW_WRITE, 5 },
+		{ SW_READ, 3 },
+	};
+	u32 sequence1_results[3] = {
+		[ SW_NONE ] = 0,
+		[ SW_READ ] = 4,
+		[ SW_WRITE ] =16 
+	};
+
+	struct sw_test sequence2[] = {
+		{ SW_WRITE, 5 },
+		{ SW_WRITE, 34 },
+		{ SW_READ, 3 },
+		{ SW_WRITE, 7 },
+		{ SW_READ, 4 },
+	};
+	u32 sequence2_results[3] = {
+		[ SW_NONE ] = 0,
+		[ SW_READ ] = 7,
+		[ SW_WRITE ] =13 
+	};
+
+	struct sw_test sequence3[] = {
+		{ SW_WRITE, 5 },
+		{ SW_WRITE, 17 },
+		{ SW_NONE, 3 },
+		{ SW_WRITE, 2 },
+		{ SW_READ, 4 },
+	};
+	u32 sequence3_results[3] = {
+		[ SW_NONE ] = 3,
+		[ SW_READ ] = 4,
+		[ SW_WRITE ] =13 
+	};
+
+	printf("sw_alloc(&sw, %d): %d\n", WIDTH, sw_alloc(&sw, WIDTH));
+	printf("sw_get_width(&sw): %u\n", sw_get_width(&sw));
+
+	TEST_SEQUENCE(&sw, sequence1);
+	sw_reset(&sw);
+	TEST_SEQUENCE(&sw, sequence2);
+	sw_reset(&sw);
+	TEST_SEQUENCE(&sw, sequence3);
+
+	sw_free(&sw);
 	return 0;
 }
 
