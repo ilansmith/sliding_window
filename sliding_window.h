@@ -3,9 +3,6 @@
 
 #include "sliding_window_compat.h"
 
-typedef unsigned int u32;
-typedef unsigned long spinlock_t;
-
 enum slw_val {
 	SLW_NONE = 0,
 	SLW_READ,

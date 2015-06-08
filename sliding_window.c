@@ -14,7 +14,7 @@ int slw_init(struct sliding_window *slw, u32 width)
 		return -EINVAL;
 	}
 
-	size = ((2 * width + 32 - 1) / 32); /* size in words */
+	size = DIV_ROUND_UP(2 * width, 32); /* size in words */
 	window = (u32*)kmalloc(size * sizeof(u32), GFP_KERNEL);
 	if (!window)
 		return -ENOMEM;

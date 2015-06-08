@@ -5,11 +5,11 @@
 #include <stdio.h>
 
 #define EXPORT_SYMBOL(sym)
+#define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 
 #define EINVAL 2
 #define ENOMEM 3
 
-#define bool int
 #define true 1
 #define false 0
 
@@ -32,5 +32,8 @@
 
 #define pr_err(str, ...) printf(str, ##__VA_ARGS__)
 
+typedef int bool;
+typedef unsigned int u32;
+typedef unsigned long spinlock_t;
 #endif
 
