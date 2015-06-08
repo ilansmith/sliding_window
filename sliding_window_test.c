@@ -9,16 +9,16 @@
 
 #define ARRAY_SZ(arr) (sizeof(arr)/sizeof(arr[0]))
 
-#define PRINT_RESULT(sw, test, sw_val) print_result(#sw_val, \
-	sw_val_get(sw, sw_val), test->expected[sw_val])
+#define PRINT_RESULT(slw, test, slw_val) print_result(#slw_val, \
+	slw_val_get(slw, slw_val), test->expected[slw_val])
 
-struct sw_sequence {
-	enum sw_val dir;
+struct slw_sequence {
+	enum slw_val dir;
 	u32 count;
 };
 
-struct sw_test {
-	struct sw_sequence *seq;
+struct slw_test {
+	struct slw_sequence *seq;
 	int len;
 	u32 expected[3];
 };
@@ -31,7 +31,7 @@ static void print_result(char *str, u32 result, u32 expected)
 		ok ? COL_SUCCESS : COL_FAIL, ok ? "good" : "bad", COL_NORMAL);
 }
 
-static void test_sequence(struct sliding_window *sw, struct sw_test *test)
+static void test_sequence(struct sliding_window *slw, struct slw_test *test)
 {
 	int i;
 
@@ -39,79 +39,79 @@ static void test_sequence(struct sliding_window *sw, struct sw_test *test)
 		int j;
 
 		for (j = 0; j < test->seq[i].count; j++)
-			sw_advance(sw, test->seq[i].dir);
+			slw_advance(slw, test->seq[i].dir);
 	}
 
 	printf("\n");
-	PRINT_RESULT(sw, test, SW_NONE);
-	PRINT_RESULT(sw, test, SW_READ);
-	PRINT_RESULT(sw, test, SW_WRITE);
+	PRINT_RESULT(slw, test, SLW_NONE);
+	PRINT_RESULT(slw, test, SLW_READ);
+	PRINT_RESULT(slw, test, SLW_WRITE);
 }
 
 int main(int argc, char **argv)
 {
 	int err;
 	u32 width;
-	struct sliding_window sw;
-	struct sw_sequence sequence1[] = {
-		{ SW_WRITE, 15 },
-		{ SW_READ, 1 },
-		{ SW_WRITE, 5 },
-		{ SW_READ, 3 },
+	struct sliding_window slw;
+	struct slw_sequence sequence1[] = {
+		{ SLW_WRITE, 15 },
+		{ SLW_READ, 1 },
+		{ SLW_WRITE, 5 },
+		{ SLW_READ, 3 },
 	};
-	struct sw_test t1 = {
+	struct slw_test t1 = {
 		.seq = sequence1,
 		.len = ARRAY_SZ(sequence1),
 		.expected = {
-			[ SW_NONE ] = 0, [ SW_READ ] = 4, [ SW_WRITE ] = 16 
+			[ SLW_NONE ] = 0, [ SLW_READ ] = 4, [ SLW_WRITE ] = 16 
 		}
 	};
 
-	struct sw_sequence sequence2[] = {
-		{ SW_WRITE, 5 },
-		{ SW_WRITE, 34 },
-		{ SW_READ, 3 },
-		{ SW_WRITE, 7 },
-		{ SW_READ, 4 },
+	struct slw_sequence sequence2[] = {
+		{ SLW_WRITE, 5 },
+		{ SLW_WRITE, 34 },
+		{ SLW_READ, 3 },
+		{ SLW_WRITE, 7 },
+		{ SLW_READ, 4 },
 	};
-	struct sw_test t2 = {
+	struct slw_test t2 = {
 		.seq = sequence2,
 		.len = ARRAY_SZ(sequence2),
 		.expected = {
-			[ SW_NONE ] = 0, [ SW_READ ] = 7, [ SW_WRITE ] = 13 
+			[ SLW_NONE ] = 0, [ SLW_READ ] = 7, [ SLW_WRITE ] = 13 
 		}
 	};
 
-	struct sw_sequence sequence3[] = {
-		{ SW_WRITE, 5 },
-		{ SW_WRITE, 17 },
-		{ SW_NONE, 3 },
-		{ SW_WRITE, 2 },
-		{ SW_READ, 4 },
+	struct slw_sequence sequence3[] = {
+		{ SLW_WRITE, 5 },
+		{ SLW_WRITE, 17 },
+		{ SLW_NONE, 3 },
+		{ SLW_WRITE, 2 },
+		{ SLW_READ, 4 },
 	};
-	struct sw_test t3 = {
+	struct slw_test t3 = {
 		.seq = sequence3,
 		.len = ARRAY_SZ(sequence3),
 		.expected = {
-			[ SW_NONE ] = 3, [ SW_READ ] = 4, [ SW_WRITE ] = 13 
+			[ SLW_NONE ] = 3, [ SLW_READ ] = 4, [ SLW_WRITE ] = 13 
 		}
 	};
 
-	err = sw_init(&sw, WIDTH);
-	printf("sw_init(&sw, %d): %d (%s%s%s)\n", WIDTH, err,
+	err = slw_init(&slw, WIDTH);
+	printf("slw_init(&slw, %d): %d (%s%s%s)\n", WIDTH, err,
 		err ? COL_FAIL : COL_SUCCESS, err ? "bad" : "good", COL_NORMAL);
-	width = sw_width_get(&sw);
-	printf("sw_widthget_(&sw): %u (%s%s%s)\n", sw_width_get(&sw),
+	width = slw_width_get(&slw);
+	printf("slw_widthget_(&slw): %u (%s%s%s)\n", slw_width_get(&slw),
 		width != WIDTH ? COL_FAIL : COL_SUCCESS, err ? "bad" : "good",
 		COL_NORMAL);
 
-	test_sequence(&sw, &t1);
-	sw_reset(&sw);
-	test_sequence(&sw, &t2);
-	sw_reset(&sw);
-	test_sequence(&sw, &t3);
+	test_sequence(&slw, &t1);
+	slw_reset(&slw);
+	test_sequence(&slw, &t2);
+	slw_reset(&slw);
+	test_sequence(&slw, &t3);
 
-	sw_uninit(&sw);
+	slw_uninit(&slw);
 	return 0;
 }
 

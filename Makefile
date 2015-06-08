@@ -2,7 +2,7 @@ CC=gcc
 CPP=cpp
 #CFLAGS=-ansi -pedantic-errors -Werror -Wall -g
 CFLAGS=-Werror -Wall -g
-APP=sw
+APP=slw
 
 OBJS=sliding_window.o sliding_window_test.o
 

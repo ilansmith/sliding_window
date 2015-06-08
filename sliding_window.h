@@ -6,10 +6,10 @@
 typedef unsigned int u32;
 typedef unsigned long spinlock_t;
 
-enum sw_val {
-	SW_NONE = 0,
-	SW_READ,
-	SW_WRITE
+enum slw_val {
+	SLW_NONE = 0,
+	SLW_READ,
+	SLW_WRITE
 };
 
 struct sliding_window {
@@ -22,13 +22,13 @@ struct sliding_window {
 	u32 stat[2];		/* statistic table */
 };
 
-int sw_init(struct sliding_window *sw, u32 size);
-void sw_uninit(struct sliding_window *sw);
+int slw_init(struct sliding_window *slw, u32 width);
+void slw_uninit(struct sliding_window *slw);
 
-bool sw_advance(struct sliding_window *sw, enum sw_val val);
-void sw_reset(struct sliding_window *sw);
+bool slw_advance(struct sliding_window *slw, enum slw_val val_new);
+void slw_reset(struct sliding_window *slw);
 
-u32 sw_width_get(struct sliding_window *sw);
-u32 sw_val_get(struct sliding_window *sw, enum sw_val val);
+u32 slw_width_get(struct sliding_window *slw);
+u32 slw_val_get(struct sliding_window *slw, enum slw_val val);
 #endif
 
