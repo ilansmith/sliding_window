@@ -66,9 +66,9 @@ out:
 	/* update pointers */
 	slw->__offset += 2;
 	if ((31 < slw->__offset) ||
-		((slw->__major == slw->__window + slw->__size - 1) &&
-		((slw->width * 2 - (slw->__size - 1) * 32) - 1 <
-		 slw->__offset))) {
+			((slw->__major == slw->__window + slw->__size - 1) &&
+			 ((slw->width * 2 - (slw->__size - 1) * 32) - 1 <
+			  slw->__offset))) {
 		slw->__offset = 0x0;
 
 		if (slw->__major < slw->__window + slw->__size - 1)
