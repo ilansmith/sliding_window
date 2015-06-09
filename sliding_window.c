@@ -59,7 +59,7 @@ bool slw_advance(struct sliding_window *slw, enum slw_val val_new)
 
 	if (val_stale && SLW_STAT(slw, val_stale))
 		SLW_STAT(slw, val_stale)--;
-	if (val_new && SLW_STAT(slw, val_new) <= UINT_MAX)
+	if (val_new && SLW_STAT(slw, val_new) < UINT_MAX)
 		SLW_STAT(slw, val_new)++;
 
 out:
