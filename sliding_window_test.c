@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 	printf("slw_init(&slw, %d): %d (%s%s%s)\n", WIDTH, err,
 		err ? COL_FAIL : COL_SUCCESS, err ? "bad" : "good", COL_NORMAL);
 	width = slw_width_get(&slw);
-	printf("slw_widthget_(&slw): %u (%s%s%s)\n", slw_width_get(&slw),
+	printf("slw_width_get(&slw): %u (%s%s%s)\n", slw_width_get(&slw),
 		width != WIDTH ? COL_FAIL : COL_SUCCESS, err ? "bad" : "good",
 		COL_NORMAL);
 
