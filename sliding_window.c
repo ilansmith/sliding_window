@@ -5,35 +5,6 @@
 /* val == 0 is reserved for SLW_NONE, which is does not have a stat counter */
 #define SLW_STAT(slw, val) (slw)->stat[(val)-1]
 
-int slw_init(struct sliding_window *slw, u32 width)
-{
-	u32 *window, size;
-
-	if (!width) {
-		pr_err("sliding_window: invalid window width\n");
-		return -EINVAL;
-	}
-
-	size = DIV_ROUND_UP(2 * width, 32); /* size in words */
-	window = (u32*)kmalloc(size * sizeof(u32), GFP_KERNEL);
-	if (!window)
-		return -ENOMEM;
-
-	slw->__window = window;
-	slw->__size = size;
-
-	slw->width = width;
-	memset(slw->stat, 0, sizeof(slw->stat));
-
-	slw->__major = slw->__window;
-	slw->__offset = 0x0;
-
-	spin_lock_init(&slw->__lock);
-
-	return 0;
-}
-EXPORT_SYMBOL(slw_init);
-
 void slw_uninit(struct sliding_window *slw)
 {
 	kfree(slw->__window);
@@ -41,10 +12,76 @@ void slw_uninit(struct sliding_window *slw)
 }
 EXPORT_SYMBOL(slw_uninit);
 
+static inline int __slw_window_alloc(u32 width, u32 **window, u32 *size)
+{
+	u32 __size, *__window;
+
+	if (!width) {
+		pr_err("sliding_window: invalid width: 0\n");
+		return -EINVAL;
+	}
+
+	__size = DIV_ROUND_UP(2 * (width), 32); /* size in words */
+	__window = (u32*)kmalloc(__size * sizeof(u32), GFP_KERNEL);
+	if (!__window) {
+		pr_err("sliding_window: unable to allocate storage for " \
+			"monitoring %u elements\n", width);
+		return -ENOMEM;
+	}
+
+	*window = __window;
+	*size = __size;
+	return 0;
+}
+
+static inline void __slw_window_setup(struct sliding_window *slw, u32 width,
+	u32 *window, u32 size)
+{
+	slw->__window = window;
+	slw->__size = size;
+	slw->width = width;
+	memset(slw->stat, 0, sizeof(slw->stat));
+	slw->__major = slw->__window;
+	slw->__offset = 0x0;
+}
+
+int slw_init(struct sliding_window *slw, u32 width)
+{
+	u32 ret, size, *window;
+
+	ret = __slw_window_alloc(width, &window, &size);
+	if (ret)
+		return ret;
+
+	__slw_window_setup(slw, width, window, size);
+	spin_lock_init(&slw->__lock);
+	return 0;
+}
+EXPORT_SYMBOL(slw_init);
+
+int slw_resize(struct sliding_window *slw, u32 width)
+{
+	u32 ret, size, *window;
+	unsigned long flags;
+
+	ret = __slw_window_alloc(width, &window, &size);
+	if (ret)
+		return ret;
+
+	spin_lock_irqsave(&slw->__lock, flags);
+	kfree(slw->__window);
+	__slw_window_setup(slw, width, window, size);
+	spin_unlock_irqrestore(&slw->__lock, flags);
+	return 0;
+}
+EXPORT_SYMBOL(slw_resize);
+
 bool slw_advance(struct sliding_window *slw, enum slw_val val_new)
 {
 	unsigned long flags;
 	enum slw_val val_stale;
+
+	BUG_ON(!slw->width);
 
 	spin_lock_irqsave(&slw->__lock, flags);
 	val_stale = (*slw->__major & ((0x3) << slw->__offset)) >> slw->__offset;
@@ -59,7 +96,7 @@ bool slw_advance(struct sliding_window *slw, enum slw_val val_new)
 
 	if (val_stale && SLW_STAT(slw, val_stale))
 		SLW_STAT(slw, val_stale)--;
-	if (val_new && SLW_STAT(slw, val_new) < UINT_MAX)
+	if (val_new && (SLW_STAT(slw, val_new) < UINT_MAX))
 		SLW_STAT(slw, val_new)++;
 
 out:
@@ -108,6 +145,8 @@ u32 slw_val_get(struct sliding_window *slw, enum slw_val val)
 {
 	u32 ret;
 	unsigned long flags;
+
+	BUG_ON(!slw->width);
 
 	spin_lock_irqsave(&slw->__lock, flags);
 	if (val == SLW_NONE) {

@@ -32,6 +32,14 @@
 
 #define pr_err(str, ...) printf(str, ##__VA_ARGS__)
 
+#define BUG_ON(condition) \
+	do { \
+		if (condition) { \
+			printf("BUG_ON(), exiting...\n"); \
+			exit(1); \
+		} \
+	} while (0)
+
 typedef int bool;
 typedef unsigned int u32;
 typedef unsigned long spinlock_t;

@@ -21,6 +21,7 @@ struct sliding_window {
 
 int slw_init(struct sliding_window *slw, u32 width);
 void slw_uninit(struct sliding_window *slw);
+int slw_resize(struct sliding_window *slw, u32 width);
 
 bool slw_advance(struct sliding_window *slw, enum slw_val val_new);
 void slw_reset(struct sliding_window *slw);
