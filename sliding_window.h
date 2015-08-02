@@ -1,7 +1,7 @@
 #ifndef _SLIDING_WINDOW_H_
 #define _SLIDING_WINDOW_H_
 
-#include "sliding_window_compat.h"
+#include "kernel.h"
 
 enum slw_val {
 	SLW_NONE = 0,
