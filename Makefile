@@ -16,7 +16,7 @@ $(APP): $(OBJS)
 
 clean:
 	@echo "removing object files"
-	@ls *.o | grep -v $(APP) | xargs rm -f
+	@ls *.o 2>/dev/null | grep -v $(APP) | xargs rm -f
 
 cleanall: clean
 	@echo "removing tag file"
