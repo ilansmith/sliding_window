@@ -1,5 +1,5 @@
-#ifndef _SLIDING_WINDOW_COMPAT_H_
-#define _SLIDING_WINDOW_COMPAT_H_
+#ifndef _KERNEL_H_
+#define _KERNEL_H_
 
 #include <stdlib.h>
 #include <stdio.h>
