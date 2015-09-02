@@ -27,7 +27,8 @@
 			*lock = (spinlock_t)flags; \
 	} while (0)
 
-#define kmalloc(size, gfp) calloc(1, size)
+#define kmalloc(size, gfp) malloc(size)
+#define kzalloc(size, gfp) calloc(1, size)
 #define kfree(ptr) free(ptr)
 
 #define pr_err(str, ...) printf(str, ##__VA_ARGS__)

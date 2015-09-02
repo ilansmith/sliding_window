@@ -22,7 +22,7 @@ static inline int __slw_window_alloc(u32 width, u32 **window, u32 *size)
 	}
 
 	__size = DIV_ROUND_UP(2 * (width), 32); /* size in words */
-	__window = (u32*)kmalloc(__size * sizeof(u32), GFP_KERNEL);
+	__window = (u32*)kzalloc(__size * sizeof(u32), GFP_KERNEL);
 	if (!__window) {
 		pr_err("sliding_window: unable to allocate storage for " \
 			"monitoring %u elements\n", width);
