@@ -9,6 +9,11 @@
 
 #define ARRAY_SZ(arr) (sizeof(arr)/sizeof(arr[0]))
 
+#define PRINT_RESIZE(ok) do { \
+	printf("resizing (%s%s%s)\n", (ok) ? COL_SUCCESS : COL_FAIL, \
+		(ok) ? "good" : "bad", COL_NORMAL); \
+} while (0)
+
 #define PRINT_RESULT(slw, test, slw_val) print_result(#slw_val, \
 	slw_val_get(slw, slw_val), test->expected[slw_val])
 
@@ -22,16 +27,16 @@ struct slw_io {
 	u32 count;
 };
 
-struct slw_resize {
+struct slw_size {
 	u32 sz;
 };
 
 struct slw_sequence {
+	enum slw_op op;
 	union {
 		struct slw_io io;
-		struct slw_resize resize;
+		struct slw_size resize;
 	} action;
-	enum slw_op op;
 };
 
 struct slw_test {
@@ -52,7 +57,9 @@ static void test_sequence(struct sliding_window *slw, struct slw_test *test)
 {
 	int i;
 	int reinstate_size = 0;
+	int do_resize = 0, resize_ok = 1;
 
+	printf("\n");
 	for (i = 0; i < test->len; i++) {
 		int j;
 
@@ -62,16 +69,26 @@ static void test_sequence(struct sliding_window *slw, struct slw_test *test)
 				slw_advance(slw, test->seq[i].action.io.dir);
 			break;
 		case SLW_OP_RESIZE:
-			slw_resize(slw, test->seq[i].action.resize.sz);
-			reinstate_size =
-				test->seq[i].action.resize.sz == WIDTH ? 0 : 1;
+			{
+				u32 sz = test->seq[i].action.resize.sz;
+				int ret;
+
+				do_resize = 1;
+
+				ret = slw_resize(slw, sz) ? 1 : 0;
+				resize_ok &= ret ^ (sz == slw_width_get(slw));
+
+				reinstate_size =
+					sz == WIDTH ? 0 : 1;
+			}
 			break;
 		default:
 			break;
 		}
 	}
 
-	printf("\n");
+	if (do_resize)
+		PRINT_RESIZE(resize_ok);
 	PRINT_RESULT(slw, test, SLW_NONE);
 	PRINT_RESULT(slw, test, SLW_READ);
 	PRINT_RESULT(slw, test, SLW_WRITE);
@@ -88,50 +105,94 @@ int main(int argc, char **argv)
 	struct sliding_window slw;
 
 	struct slw_sequence sequence1[] = {
-		{ .action.io = { SLW_WRITE, 15 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_READ, 1 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_WRITE, 5 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_READ, 3 }, .op = SLW_OP_IO },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 15 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 1 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 5 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 3 } },
 	};
 	struct slw_test t1 = {
 		.seq = sequence1,
 		.len = ARRAY_SZ(sequence1),
 		.expected = {
-			[ SLW_NONE ] = 0, [ SLW_READ ] = 4, [ SLW_WRITE ] = 16 
+			[ SLW_NONE ] = 0, [ SLW_READ ] = 4, [ SLW_WRITE ] = 16
 		}
 	};
 
 	struct slw_sequence sequence2[] = {
-		{ .action.io = { SLW_WRITE, 5 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_WRITE, 34 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_READ, 3 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_WRITE, 7 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_READ, 4 }, .op = SLW_OP_IO },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 5 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 34 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 3 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 7 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 4 } },
 	};
 	struct slw_test t2 = {
 		.seq = sequence2,
 		.len = ARRAY_SZ(sequence2),
 		.expected = {
-			[ SLW_NONE ] = 0, [ SLW_READ ] = 7, [ SLW_WRITE ] = 13 
+			[ SLW_NONE ] = 0, [ SLW_READ ] = 7, [ SLW_WRITE ] = 13
 		}
 	};
 
 	struct slw_sequence sequence3[] = {
-		{ .action.io = { SLW_WRITE, 5 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_WRITE, 17 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_NONE, 3 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_WRITE, 2 }, .op = SLW_OP_IO },
-		{ .action.io = { SLW_READ, 4 }, .op = SLW_OP_IO },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 5 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 17 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_NONE, 3 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 2 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 4 } },
 	};
 	struct slw_test t3 = {
 		.seq = sequence3,
 		.len = ARRAY_SZ(sequence3),
 		.expected = {
-			[ SLW_NONE ] = 3, [ SLW_READ ] = 4, [ SLW_WRITE ] = 13 
+			[ SLW_NONE ] = 3, [ SLW_READ ] = 4, [ SLW_WRITE ] = 13
 		}
 	};
 
-	struct slw_test *tests[] = { &t1, &t2, &t3 };
+	struct slw_sequence sequence4[] = {
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 5 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 14 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 53 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 27 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 2 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_NONE, 9 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 9 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 17 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 4 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_NONE, 3 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 1 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_WRITE, 2 } },
+		{ .op = SLW_OP_IO, .action.io = { SLW_READ, 4 } },
+	};
+	struct slw_test t4 = {
+		.seq = sequence4,
+		.len = ARRAY_SZ(sequence4),
+		.expected = {
+			[ SLW_NONE ] = 3, [ SLW_READ ] = 9, [ SLW_WRITE ] = 8
+		}
+	};
+
+	struct slw_sequence sequence5[] = {
+		{ .op = SLW_OP_RESIZE, .action.resize = { 10 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 43 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 401 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 57 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 67 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 0 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { 3 } },
+		{ .op = SLW_OP_RESIZE, .action.resize = { WIDTH } },
+	};
+	struct slw_test t5 = {
+		.seq = sequence5,
+		.len = ARRAY_SZ(sequence5),
+		.expected = {
+			[ SLW_NONE ] =
+				sequence5[ARRAY_SZ(sequence5)-1].action.resize.sz,
+			[ SLW_READ ] = 0,
+			[ SLW_WRITE ] = 0
+		}
+	};
+
+	struct slw_test *tests[] = { &t1, &t2, &t3, &t4, &t5 };
 
 	err = slw_init(&slw, WIDTH);
 	printf("slw_init(&slw, %d): %d (%s%s%s)\n", WIDTH, err,
