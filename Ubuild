@@ -1,0 +1,3 @@
+obj-$(CONFIG_SLW)+=sliding_window.o
+obj-ut-$(CONFIG_SLW)+=sliding_window_test.o
+

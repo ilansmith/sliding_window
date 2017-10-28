@@ -1,3 +1,4 @@
 *.o
+built-in.supp
 tags
 slw
